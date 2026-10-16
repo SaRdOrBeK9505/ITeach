@@ -1,0 +1,36 @@
+# Environments & Secrets
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# Databases
+*.sqlite3
+*.sqlite3.bak
+*.sqlite3-journal
+
+# Python cache & build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Static & Media (collected / user uploads)
+staticfiles/
+media/
+admin_bundle.js
+
+# IDEs
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
