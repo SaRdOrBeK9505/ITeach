@@ -13,13 +13,6 @@ class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
     Administratorlar va xodimlar uchun JWT access va refresh token yaratadi.
     Token payload va response tarkibida foydalanuvchining roli (role) ham birga yuboriladi.
     """
-    login = serializers.CharField(required=False, write_only=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if "username" in self.fields:
-            self.fields["username"].required = False
-
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
@@ -32,20 +25,13 @@ class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        # Foydalanuvchi login yoki username orqali kirishini ta'minlash
-        login_val = (attrs.get("login") or attrs.get(self.username_field) or "").strip()
-        if not login_val:
-            raise serializers.ValidationError({"username": [_("Foydalanuvchi nomi yoki email kiritilishi shart.")]})
+        username_val = attrs.get(self.username_field, "").strip()
 
-        # Agar email kiritilgan bo'lsa, mos keluvchi username ni aniqlash
-        if "@" in login_val:
-            user_obj = User.objects.filter(email__iexact=login_val).first()
+        # Agar email kiritilgan bo'lsa, mos keluvchi username ni topish
+        if "@" in username_val:
+            user_obj = User.objects.filter(email__iexact=username_val).first()
             if user_obj:
                 attrs[self.username_field] = user_obj.username
-            else:
-                attrs[self.username_field] = login_val
-        else:
-            attrs[self.username_field] = login_val
 
         data = super().validate(attrs)
 
