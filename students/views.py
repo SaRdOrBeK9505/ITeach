@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import Student
@@ -12,6 +13,8 @@ class StudentListCreateView(generics.ListCreateAPIView):
     POST /api/admin/students/ – Create a new student.
     """
     queryset = Student.objects.select_related("course").all()
+    serializer_class = StudentDetailSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["status", "course"]
     search_fields = ["full_name", "phone", "email", "lesson_time", "notes"]
@@ -34,3 +37,4 @@ class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Student.objects.select_related("course").all()
     serializer_class = StudentDetailSerializer
     permission_classes = [permissions.IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]

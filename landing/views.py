@@ -1,5 +1,6 @@
 from django.utils import timezone
 from rest_framework import generics, status
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -57,6 +58,7 @@ class SiteSettingsUpdateView(generics.RetrieveUpdateAPIView):
     queryset = SiteSettings.objects.all()
     serializer_class = SiteSettingsSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         obj, _ = SiteSettings.objects.get_or_create(pk=1)
@@ -83,6 +85,7 @@ class HeroSectionAdminListCreate(generics.ListCreateAPIView):
     queryset = HeroSection.objects.all()
     serializer_class = HeroSectionSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class HeroSectionAdminDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -90,6 +93,7 @@ class HeroSectionAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = HeroSection.objects.all()
     serializer_class = HeroSectionSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 # ─────────────────────────────────────────────
@@ -172,6 +176,7 @@ class CourseDetailView(generics.RetrieveAPIView):
 class CourseAdminListCreate(generics.ListCreateAPIView):
     """GET/POST /api/admin/courses/"""
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ["category", "level", "is_popular", "is_active"]
     search_fields = ["name"]
@@ -186,6 +191,7 @@ class CourseAdminListCreate(generics.ListCreateAPIView):
 class CourseAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     """GET/PUT/PATCH/DELETE /api/admin/courses/<pk>/"""
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Course.objects.select_related("category").prefetch_related("features", "mentors").all()
@@ -246,6 +252,7 @@ class MentorDetailView(generics.RetrieveAPIView):
 
 class MentorAdminListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [SearchFilter]
     search_fields = ["name", "position"]
 
@@ -258,6 +265,7 @@ class MentorAdminListCreate(generics.ListCreateAPIView):
 
 class MentorAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Mentor.objects.prefetch_related("courses").all()
@@ -281,12 +289,14 @@ class PartnerAdminListCreate(generics.ListCreateAPIView):
     queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class PartnerAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Partner.objects.all()
     serializer_class = PartnerSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 # ─────────────────────────────────────────────
@@ -304,6 +314,9 @@ class GraduateListView(generics.ListAPIView):
 
 class GraduateAdminListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["course"]
 
     def get_queryset(self):
         return Graduate.objects.select_related("course").all()
@@ -314,6 +327,7 @@ class GraduateAdminListCreate(generics.ListCreateAPIView):
 
 class GraduateAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Graduate.objects.select_related("course").all()
@@ -401,6 +415,7 @@ class BlogCategoryAdminDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class BlogPostAdminListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["category", "is_published"]
     search_fields = ["title"]
@@ -422,6 +437,7 @@ class BlogPostAdminListCreate(generics.ListCreateAPIView):
 
 class BlogPostAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return BlogPost.objects.select_related("category", "author").all()
@@ -542,6 +558,7 @@ class AboutSectionView(APIView):
 
 class AboutSectionAdminListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return AboutSection.objects.prefetch_related("features").all()
@@ -552,6 +569,7 @@ class AboutSectionAdminListCreate(generics.ListCreateAPIView):
 
 class AboutSectionAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return AboutSection.objects.prefetch_related("features").all()
@@ -577,6 +595,7 @@ class TestimonialListView(generics.ListAPIView):
 
 class TestimonialAdminListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Testimonial.objects.select_related("course").all()
@@ -587,6 +606,7 @@ class TestimonialAdminListCreate(generics.ListCreateAPIView):
 
 class TestimonialAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Testimonial.objects.select_related("course").all()
@@ -612,6 +632,7 @@ class HeroSlideAdminListCreate(generics.ListCreateAPIView):
     queryset = HeroSlide.objects.all()
     serializer_class = HeroSlideSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class HeroSlideAdminDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -619,6 +640,7 @@ class HeroSlideAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = HeroSlide.objects.all()
     serializer_class = HeroSlideSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 # ─────────────────────────────────────────────
@@ -636,6 +658,7 @@ class StudentResultAdminListCreate(generics.ListCreateAPIView):
     queryset = StudentResult.objects.all()
     serializer_class = StudentResultSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 class StudentResultAdminDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -643,6 +666,7 @@ class StudentResultAdminDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentResult.objects.all()
     serializer_class = StudentResultSerializer
     permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 
 # ─────────────────────────────────────────────

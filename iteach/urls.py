@@ -33,7 +33,6 @@ urlpatterns = [
     path("api/auth/", include("accounts.urls", namespace="accounts")),
     path("api/admin/dashboard/", include("dashboard.urls", namespace="dashboard")),
     path("api/admin/students/", include("students.urls", namespace="students-admin")),
-    path("api/students/", include("students.urls", namespace="students")),
     path("api/", include("landing.urls", namespace="landing")),
 
     # Swagger UI

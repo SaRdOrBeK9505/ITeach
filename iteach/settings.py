@@ -126,6 +126,11 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_PARSER_CLASSES": [
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.MultiPartParser",
+        "rest_framework.parsers.FormParser",
+    ],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
@@ -182,6 +187,7 @@ SWAGGER_SETTINGS = {
     "DEEP_LINKING": True,
     "SHOW_EXTENSIONS": True,
     "DEFAULT_MODEL_RENDERING": "example",
+    "DEFAULT_AUTO_SCHEMA_CLASS": "iteach.swagger.AutoMultipartSchema",
 }
 
 REDOC_SETTINGS = {
