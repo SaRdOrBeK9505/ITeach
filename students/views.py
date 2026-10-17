@@ -17,7 +17,7 @@ class StudentListCreateView(generics.ListCreateAPIView):
     search_fields = ["full_name", "phone", "email", "lesson_time", "notes"]
     ordering_fields = ["created_at", "full_name", "enrolled_date", "status"]
     ordering = ["-created_at"]
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAdminUser]
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -33,4 +33,4 @@ class StudentDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Student.objects.select_related("course").all()
     serializer_class = StudentDetailSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAdminUser]

@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from rest_framework import generics, status
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .serializers import (
-    AdminLoginSerializer,
+    AdminTokenObtainPairSerializer,
+    CustomTokenRefreshSerializer,
     UserProfileSerializer,
     ChangePasswordSerializer,
 )
@@ -14,17 +15,23 @@ from .serializers import (
 User = get_user_model()
 
 
-class AdminLoginView(APIView):
+class AdminTokenObtainPairView(TokenObtainPairView):
     """
-    POST /api/auth/login/
-    Authenticates admin users via username or email and returns JWT access + refresh tokens.
+    POST /api/auth/login/ yoki POST /api/auth/token/
+    SimpleJWT asosida administratorlarga JWT access va refresh token beradi
+    hamda foydalanuvchining roli (role) va ma'lumotlarini qaytaradi.
     """
-    permission_classes = [AllowAny]
+    serializer_class = AdminTokenObtainPairSerializer
 
-    def post(self, request):
-        serializer = AdminLoginSerializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    """
+    POST /api/auth/refresh/ yoki POST /api/auth/token/refresh/
+    SimpleJWT asosida tokenni yangilaydi va foydalanuvchi rolini (role) qaytaradi.
+    """
+    serializer_class = CustomTokenRefreshSerializer
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):

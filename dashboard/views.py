@@ -16,7 +16,7 @@ class DashboardSummaryView(APIView):
     Main executive dashboard KPI metrics and recent tables for iTeach administrator portal.
     Corresponds exactly to screenshots image copy.png and image copy 2.png.
     """
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
         ctx = {"request": request}
@@ -82,7 +82,7 @@ class DashboardAnalyticsView(APIView):
     GET /api/admin/dashboard/analytics/
     Provides charts and analytics for student distribution per course and monthly trends.
     """
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
         # Course distribution

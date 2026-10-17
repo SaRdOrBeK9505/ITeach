@@ -1,90 +1,107 @@
-from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.models import update_last_login
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
 
-class AdminLoginSerializer(serializers.Serializer):
+class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
-    Authenticates administrator by username OR email and returns JWT tokens.
-    Designed specifically for the iTeach admin portal login screen.
+    SimpleJWT TokenObtainPairSerializer vorisi.
+    Administratorlar va xodimlar uchun JWT access va refresh token yaratadi.
+    Token payload va response tarkibida foydalanuvchining roli (role) ham birga yuboriladi.
     """
-    login = serializers.CharField(
-        required=True,
-        help_text=_("Foydalanuvchi nomi yoki email manzili")
-    )
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        style={"input_type": "password"}
-    )
-    remember_me = serializers.BooleanField(required=False, default=False)
+    login = serializers.CharField(required=False, write_only=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "username" in self.fields:
+            self.fields["username"].required = False
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # JWT token payload ichiga custom claimlar:
+        token["role"] = user.role
+        token["username"] = user.username
+        token["email"] = user.email
+        token["is_staff"] = user.is_staff
+        token["is_superuser"] = user.is_superuser
+        return token
 
     def validate(self, attrs):
-        login_input = attrs.get("login", "").strip()
-        password = attrs.get("password")
+        # Foydalanuvchi login yoki username orqali kirishini ta'minlash
+        login_val = (attrs.get("login") or attrs.get(self.username_field) or "").strip()
+        if not login_val:
+            raise serializers.ValidationError({"username": [_("Foydalanuvchi nomi yoki email kiritilishi shart.")]})
 
-        # Resolve user by username or email
-        user = None
-        if "@" in login_input:
-            user_obj = User.objects.filter(email__iexact=login_input).first()
+        # Agar email kiritilgan bo'lsa, mos keluvchi username ni aniqlash
+        if "@" in login_val:
+            user_obj = User.objects.filter(email__iexact=login_val).first()
             if user_obj:
-                user = authenticate(username=user_obj.username, password=password)
+                attrs[self.username_field] = user_obj.username
+            else:
+                attrs[self.username_field] = login_val
         else:
-            user = authenticate(username=login_input, password=password)
+            attrs[self.username_field] = login_val
 
-        if not user:
-            raise serializers.ValidationError(
-                _("Login yoki parol noto'g'ri kiritildi.")
-            )
+        data = super().validate(attrs)
 
-        if not user.is_active:
-            raise serializers.ValidationError(
-                _("Foydalanuvchi hisobi faol emas.")
-            )
-
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        update_last_login(None, user)
-
-        role = "Super Admin" if user.is_superuser else ("Administrator" if user.is_staff else "Foydalanuvchi")
-
-        return {
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "full_name": user.get_full_name() or user.username,
-                "role": role,
-                "is_staff": user.is_staff,
-                "is_superuser": user.is_superuser,
-            }
+        # Response ichida tokenlar bilan birga user va uning roli yuboriladi
+        data["role"] = self.user.role
+        data["user"] = {
+            "id": self.user.id,
+            "username": self.user.username,
+            "email": self.user.email,
+            "full_name": self.user.get_full_name() or self.user.username,
+            "role": self.user.role,
+            "role_display": self.user.get_role_display(),
+            "phone": self.user.phone,
+            "avatar": self.user.avatar.url if self.user.avatar else None,
+            "is_staff": self.user.is_staff,
+            "is_superuser": self.user.is_superuser,
         }
+        return data
+
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    """
+    SimpleJWT TokenRefreshSerializer vorisi.
+    Refresh token orqali yangi access token beradi va
+    response ichida foydalanuvchi roli (role) ni ham qaytaradi.
+    """
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        try:
+            refresh = RefreshToken(attrs["refresh"])
+            user_id = refresh.payload.get("user_id")
+            if user_id:
+                user = User.objects.filter(id=user_id).first()
+                if user:
+                    data["role"] = user.role
+        except Exception:
+            pass
+        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Profile serializer for current logged in user."""
     full_name = serializers.SerializerMethodField()
-    role = serializers.SerializerMethodField()
+    role_display = serializers.CharField(source="get_role_display", read_only=True)
 
     class Meta:
         model = User
         fields = [
             "id", "username", "email", "first_name", "last_name",
-            "full_name", "role", "is_staff", "is_superuser", "date_joined",
+            "full_name", "phone", "avatar", "role", "role_display",
+            "is_staff", "is_superuser", "date_joined",
         ]
-        read_only_fields = ["id", "username", "role", "is_staff", "is_superuser", "date_joined"]
+        read_only_fields = ["id", "username", "role", "role_display", "is_staff", "is_superuser", "date_joined"]
 
     def get_full_name(self, obj):
         return obj.get_full_name() or obj.username
-
-    def get_role(self, obj):
-        return "Super Admin" if obj.is_superuser else ("Administrator" if obj.is_staff else "Foydalanuvchi")
 
 
 class ChangePasswordSerializer(serializers.Serializer):
